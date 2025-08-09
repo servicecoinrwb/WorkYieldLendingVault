@@ -19,19 +19,20 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1rem;
         }
-        .btn-primary {
-            background-color: #3b82f6;
+        /* --- BRANDING COLOR --- */
+        .btn-brand {
+            background-color: #f97316; /* Vibrant Orange */
             transition: background-color 0.3s;
         }
-        .btn-primary:hover {
-            background-color: #2563eb;
+        .btn-brand:hover {
+            background-color: #ea580c;
         }
         .btn-secondary {
-            background-color: #4f46e5;
+            background-color: #374151;
             transition: background-color 0.3s;
         }
         .btn-secondary:hover {
-            background-color: #4338ca;
+            background-color: #4b5563;
         }
         .btn-danger {
             background-color: #ef4444;
@@ -41,12 +42,13 @@
             background-color: #dc2626;
         }
         .tab.active {
-            border-color: #3b82f6;
-            background-color: rgba(59, 130, 246, 0.2);
+            border-color: #f97316; /* Vibrant Orange */
+            background-color: rgba(249, 115, 22, 0.2);
+            color: #f97316;
         }
         .spinner {
             border: 2px solid #f3f3f3;
-            border-top: 2px solid #3b82f6;
+            border-top: 2px solid #f97316; /* Vibrant Orange */
             border-radius: 50%;
             width: 16px;
             height: 16px;
@@ -71,7 +73,7 @@
         }
         .notification-success { background-color: #22c55e; }
         .notification-error { background-color: #ef4444; }
-        .notification-info { background-color: #3b82f6; }
+        .notification-info { background-color: #f97316; }
     </style>
 </head>
 <body class="antialiased">
@@ -80,7 +82,7 @@
             <!-- Header -->
             <header class="flex justify-between items-center mb-8">
                 <h1 class="text-2xl sm:text-3xl font-bold text-white">WorkYield Lending Vault</h1>
-                <button id="connectButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                <button id="connectButton" class="btn-brand text-white font-semibold py-2 px-4 rounded-lg shadow-md">
                     Connect Wallet
                 </button>
             </header>
@@ -109,9 +111,9 @@
                 <div class="glass-card p-6 sm:p-8">
                     <!-- Tabs -->
                     <div class="flex border-b border-gray-700 mb-6">
-                        <button id="depositTab" class="tab active py-3 px-6 text-lg font-medium border-b-2 border-transparent hover:text-blue-400">Manage Collateral</button>
-                        <button id="borrowTab" class="tab py-3 px-6 text-lg font-medium border-b-2 border-transparent hover:text-blue-400">Borrow</button>
-                        <button id="repayTab" class="tab py-3 px-6 text-lg font-medium border-b-2 border-transparent hover:text-blue-400">Repay</button>
+                        <button id="depositTab" class="tab active py-3 px-6 text-lg font-medium border-b-2 border-transparent hover:text-orange-400">Manage Collateral</button>
+                        <button id="borrowTab" class="tab py-3 px-6 text-lg font-medium border-b-2 border-transparent hover:text-orange-400">Borrow</button>
+                        <button id="repayTab" class="tab py-3 px-6 text-lg font-medium border-b-2 border-transparent hover:text-orange-400">Repay</button>
                     </div>
 
                     <!-- Panels -->
@@ -120,25 +122,39 @@
                         <div id="depositPanel">
                             <h3 class="text-xl font-semibold mb-4">Deposit or Withdraw WYT Collateral</h3>
                             <div class="flex flex-col sm:flex-row items-center gap-4">
-                                <input type="number" id="collateralAmount" placeholder="Amount of WYT" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <button id="depositButton" class="w-full sm:w-auto btn-primary text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Deposit</button>
+                                <input type="number" id="collateralAmount" placeholder="Amount of WYT" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                                <button id="depositButton" class="w-full sm:w-auto btn-brand text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Deposit</button>
                                 <button id="withdrawButton" class="w-full sm:w-auto btn-secondary text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Withdraw</button>
                             </div>
                         </div>
                         <!-- Borrow Panel -->
                         <div id="borrowPanel" class="hidden">
                              <h3 class="text-xl font-semibold mb-4">Borrow pUSD</h3>
-                            <div class="flex flex-col sm:flex-row items-center gap-4">
-                                <input type="number" id="borrowAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <button id="borrowButton" class="w-full sm:w-auto btn-primary text-white font-semibold py-2 px-6 rounded-lg">Borrow</button>
-                            </div>
+                             <div class="space-y-6">
+                                <!-- Short Term Loan -->
+                                <div>
+                                    <h4 class="font-semibold mb-2">Short Term Loan (30 Days)</h4>
+                                    <div class="flex flex-col sm:flex-row items-center gap-4">
+                                        <input type="number" id="shortTermAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                                        <button id="borrowShortTermButton" class="w-full sm:w-auto btn-brand text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Borrow Short Term</button>
+                                    </div>
+                                </div>
+                                <!-- Long Term Loan -->
+                                <div>
+                                    <h4 class="font-semibold mb-2">Long Term Loan (1 Year)</h4>
+                                     <div class="flex flex-col sm:flex-row items-center gap-4">
+                                        <input type="number" id="longTermAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                                        <button id="borrowLongTermButton" class="w-full sm:w-auto btn-brand text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Borrow Long Term</button>
+                                    </div>
+                                </div>
+                             </div>
                         </div>
                         <!-- Repay Panel -->
                         <div id="repayPanel" class="hidden">
                             <h3 class="text-xl font-semibold mb-4">Repay pUSD Debt</h3>
                             <div class="flex flex-col sm:flex-row items-center gap-4">
-                                <input type="number" id="repayAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <button id="repayButton" class="w-full sm:w-auto btn-primary text-white font-semibold py-2 px-6 rounded-lg">Repay</button>
+                                <input type="number" id="repayAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                                <button id="repayButton" class="w-full sm:w-auto btn-brand text-white font-semibold py-2 px-6 rounded-lg">Repay</button>
                             </div>
                         </div>
                     </div>
@@ -162,7 +178,7 @@
                             <h3 class="font-semibold mb-2">Vault Funds</h3>
                             <div class="flex items-center gap-4">
                                 <input type="number" id="fundAmount" placeholder="pUSD Amount" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
-                                <button id="fundVaultButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg whitespace-nowrap">Fund</button>
+                                <button id="fundVaultButton" class="btn-brand text-white font-semibold py-2 px-4 rounded-lg whitespace-nowrap">Fund</button>
                                 <button id="withdrawVaultButton" class="btn-secondary text-white font-semibold py-2 px-4 rounded-lg whitespace-nowrap">Withdraw</button>
                             </div>
                         </div>
@@ -171,7 +187,7 @@
                             <h3 class="font-semibold mb-2">Loan To Value (e.g., 5000 for 50%)</h3>
                             <div class="flex items-center gap-4">
                                 <input type="number" id="ltvAmount" placeholder="New LTV" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
-                                <button id="setLtvButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg">Set</button>
+                                <button id="setLtvButton" class="btn-brand text-white font-semibold py-2 px-4 rounded-lg">Set</button>
                             </div>
                         </div>
                         <!-- Set Interest Rate -->
@@ -179,7 +195,7 @@
                             <h3 class="font-semibold mb-2">Interest Rate (e.g., 500 for 5%)</h3>
                             <div class="flex items-center gap-4">
                                 <input type="number" id="interestRateAmount" placeholder="New Rate" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
-                                <button id="setInterestRateButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg">Set</button>
+                                <button id="setInterestRateButton" class="btn-brand text-white font-semibold py-2 px-4 rounded-lg">Set</button>
                             </div>
                         </div>
                         <!-- Set Liquidation Threshold -->
@@ -187,7 +203,7 @@
                             <h3 class="font-semibold mb-2">Liquidation Threshold (e.g., 8000 for 80%)</h3>
                             <div class="flex items-center gap-4">
                                 <input type="number" id="liqThresholdAmount" placeholder="New Threshold" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
-                                <button id="setLiqThresholdButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg">Set</button>
+                                <button id="setLiqThresholdButton" class="btn-brand text-white font-semibold py-2 px-4 rounded-lg">Set</button>
                             </div>
                         </div>
                         <!-- Set Liquidation Bonus -->
@@ -195,7 +211,7 @@
                             <h3 class="font-semibold mb-2">Liquidation Bonus (e.g., 500 for 5%)</h3>
                             <div class="flex items-center gap-4">
                                 <input type="number" id="liqBonusAmount" placeholder="New Bonus" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
-                                <button id="setLiqBonusButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg">Set</button>
+                                <button id="setLiqBonusButton" class="btn-brand text-white font-semibold py-2 px-4 rounded-lg">Set</button>
                             </div>
                         </div>
                     </div>
@@ -244,11 +260,13 @@ const LendingApp = {
             borrowPanel: document.getElementById('borrowPanel'),
             repayPanel: document.getElementById('repayPanel'),
             collateralAmountInput: document.getElementById('collateralAmount'),
-            borrowAmountInput: document.getElementById('borrowAmount'),
+            shortTermAmountInput: document.getElementById('shortTermAmount'),
+            longTermAmountInput: document.getElementById('longTermAmount'),
             repayAmountInput: document.getElementById('repayAmount'),
             depositButton: document.getElementById('depositButton'),
             withdrawButton: document.getElementById('withdrawButton'),
-            borrowButton: document.getElementById('borrowButton'),
+            borrowShortTermButton: document.getElementById('borrowShortTermButton'),
+            borrowLongTermButton: document.getElementById('borrowLongTermButton'),
             repayButton: document.getElementById('repayButton'),
             liquidatorPanel: document.getElementById('liquidatorPanel'),
             liquidateAddressInput: document.getElementById('liquidateAddress'),
@@ -275,7 +293,8 @@ const LendingApp = {
         this.elements.repayTab?.addEventListener('click', () => this.switchTab('repay'));
         this.elements.depositButton?.addEventListener('click', (e) => this.depositCollateral(e));
         this.elements.withdrawButton?.addEventListener('click', (e) => this.withdrawCollateral(e));
-        this.elements.borrowButton?.addEventListener('click', (e) => this.borrow(e));
+        this.elements.borrowShortTermButton?.addEventListener('click', (e) => this.borrow(e, 'short'));
+        this.elements.borrowLongTermButton?.addEventListener('click', (e) => this.borrow(e, 'long'));
         this.elements.repayButton?.addEventListener('click', (e) => this.repay(e));
         this.elements.liquidateButton?.addEventListener('click', (e) => this.liquidate(e));
         this.elements.fundVaultButton?.addEventListener('click', (e) => this.fundVault(e));
@@ -422,8 +441,9 @@ const LendingApp = {
         }, this.elements.collateralAmountInput); 
     },
     
-    async borrow(event) { 
-        const amount = this.elements.borrowAmountInput.value; 
+    async borrow(event, term) { 
+        const amountInput = term === 'short' ? this.elements.shortTermAmountInput : this.elements.longTermAmountInput;
+        const amount = amountInput.value;
         if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); 
         await this.handleTransaction(event, async () => { 
             const pusdDecimals = await this.pusdContract.decimals(); 
@@ -432,7 +452,7 @@ const LendingApp = {
             const borrowTx = await this.vaultContract.borrow(parsedAmount); 
             await borrowTx.wait(); 
             return "Borrow successful!"; 
-        }, this.elements.borrowAmountInput); 
+        }, amountInput); 
     },
     
     async repay(event) { 
@@ -564,4 +584,4 @@ const LendingApp = {
 window.addEventListener('load', () => LendingApp.init());
 </script>
 </body>
-</html>
+</ht
