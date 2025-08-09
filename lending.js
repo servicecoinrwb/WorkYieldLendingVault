@@ -1,8 +1,7 @@
 // --- CONFIGURATION ---
-// IMPORTANT: Replace these placeholder addresses with your deployed contract addresses
-const LENDING_VAULT_ADDRESS = 'YOUR_NEW_WorkYieldLendingVault_ADDRESS';
-const PUSD_ADDRESS = '0xCcDc74D8D4a3a54e3bB65FBcE6733f4c2317e340'; // Your pUSD token
-const WYT_ADDRESS = '0xccF4eaa301058Ec5561a07Cc38A75F47a2912EA5'; // Your WYT token
+const LENDING_VAULT_ADDRESS = '0xCcDc74D8D4a3a54e3bB65FBcE6733f4c2317e340';
+const PUSD_ADDRESS = '0xdddD73F5Df1F0DC31373357beAC77545dC5A6f3F';
+const WYT_ADDRESS = '0xccF4eaa301058Ec5561a07Cc38A75F47a2912EA5';
 
 const PLUME_MAINNET = {
     chainId: '0x18232',
@@ -44,7 +43,38 @@ const LendingApp = {
     },
     switchTab(tab) { const isDeposit = tab === 'deposit'; this.elements.depositTab?.classList.toggle('active', isDeposit); this.elements.borrowTab?.classList.toggle('active', !isDeposit); this.elements.depositPanel?.classList.toggle('hidden', !isDeposit); this.elements.borrowPanel?.classList.toggle('hidden', isDeposit); },
     async checkExistingConnection() { if (window.ethereum) { try { const accounts = await window.ethereum.request({ method: 'eth_accounts' }); if (accounts.length > 0) await this.connectWallet(); } catch (error) { console.log('No existing connection'); } } },
-    async connectWallet() { if (!window.ethereum) return this.showNotification('Please install a Web3 wallet.', 'error'); try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: PLUME_MAINNET.chainId }] }).catch(async (err) => { if (err.code === 4902) { await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [PLUME_MAINNET] }); } }); const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }); this.provider = new ethers.providers.Web3Provider(window.ethereum); this.signer = this.provider.getSigner(); this.userAddress = await this.signer.getAddress(); this.vaultContract = new ethers.Contract(LENDING_VAULT_ADDRESS, LENDING_VAULT_ABI, this.signer); this.pusdContract = new ethers.Contract(PUSD_ADDRESS, ERC20_ABI, this.signer); this.wytContract = new ethers.Contract(WYT_ADDRESS, ERC20_ABI, this.signer); const shortAddress = `${this.userAddress.slice(0, 6)}...${this.userAddress.slice(-4)}`; this.elements.connectButton.textContent = `Connected: ${shortAddress}`; this.elements.connectButton.disabled = true; this.elements.balanceInfo.classList.remove('hidden'); this.elements.lendingActions.classList.remove('hidden'); const isAdmin = await this.vaultContract.hasRole(await this.vaultContract.DEFAULT_ADMIN_ROLE(), this.userAddress); if (isAdmin) { this.elements.adminPanel.classList.remove('hidden'); } this.showNotification('Wallet connected!', 'success'); await this.updateBalances(); } catch (err) { this.showNotification(err.message || 'Connection failed.', 'error'); } },
+    async connectWallet() { 
+        if (!window.ethereum) return this.showNotification('Please install a Web3 wallet.', 'error'); 
+        try { 
+            await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: PLUME_MAINNET.chainId }] }).catch(async (err) => { if (err.code === 4902) { await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [PLUME_MAINNET] }); } }); 
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }); 
+            
+            // --- THIS IS THE FIX ---
+            // Explicitly tell Ethers.js about the Plume network to prevent ENS errors.
+            this.provider = new ethers.providers.Web3Provider(window.ethereum, {
+                name: PLUME_MAINNET.chainName,
+                chainId: parseInt(PLUME_MAINNET.chainId, 16)
+            });
+            // --- END OF FIX ---
+
+            this.signer = this.provider.getSigner(); 
+            this.userAddress = await this.signer.getAddress(); 
+            this.vaultContract = new ethers.Contract(LENDING_VAULT_ADDRESS, LENDING_VAULT_ABI, this.signer); 
+            this.pusdContract = new ethers.Contract(PUSD_ADDRESS, ERC20_ABI, this.signer); 
+            this.wytContract = new ethers.Contract(WYT_ADDRESS, ERC20_ABI, this.signer); 
+            const shortAddress = `${this.userAddress.slice(0, 6)}...${this.userAddress.slice(-4)}`; 
+            this.elements.connectButton.textContent = `Connected: ${shortAddress}`; 
+            this.elements.connectButton.disabled = true; 
+            this.elements.balanceInfo.classList.remove('hidden'); 
+            this.elements.lendingActions.classList.remove('hidden'); 
+            const isAdmin = await this.vaultContract.hasRole(await this.vaultContract.DEFAULT_ADMIN_ROLE(), this.userAddress); 
+            if (isAdmin) { this.elements.adminPanel.classList.remove('hidden'); } 
+            this.showNotification('Wallet connected!', 'success'); 
+            await this.updateBalances(); 
+        } catch (err) { 
+            this.showNotification(err.message || 'Connection failed.', 'error'); 
+        } 
+    },
     async updateBalances() { try { const [userPusd, userWyt, userCollateral, userLoan, pusdDec, wytDec] = await Promise.all([ this.pusdContract.balanceOf(this.userAddress), this.wytContract.balanceOf(this.userAddress), this.vaultContract.collateral(this.userAddress), this.vaultContract.getDebtWithInterest(this.userAddress), this.pusdContract.decimals(), this.wytContract.decimals(), ]); this.elements.pUSDBalanceDisplay.innerText = this.formatTokenValue(userPusd, pusdDec); this.elements.wytBalanceDisplay.innerText = this.formatTokenValue(userWyt, wytDec); this.elements.collateralBalanceDisplay.innerText = this.formatTokenValue(userCollateral, wytDec); this.elements.loanBalanceDisplay.innerText = this.formatTokenValue(userLoan, pusdDec); } catch (err) { console.error("Failed to update balances:", err); this.showNotification("Could not load balance data.", "error"); } },
     async depositCollateral(event) { const amount = this.elements.collateralAmountInput.value; if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); await this.handleTransaction(event, async () => { const wytDecimals = await this.wytContract.decimals(); const parsedAmount = ethers.utils.parseUnits(amount, wytDecimals); this.showNotification("Approving WYT spend...", "info"); const approveTx = await this.wytContract.approve(LENDING_VAULT_ADDRESS, parsedAmount); await approveTx.wait(); this.showNotification("Approval successful! Depositing collateral...", "info"); const depositTx = await this.vaultContract.depositCollateral(parsedAmount); await depositTx.wait(); this.elements.collateralAmountInput.value = ''; return "Collateral deposited successfully!"; }); },
     async withdrawCollateral(event) { const amount = this.elements.collateralAmountInput.value; if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); await this.handleTransaction(event, async () => { const wytDecimals = await this.wytContract.decimals(); const parsedAmount = ethers.utils.parseUnits(amount, wytDecimals); this.showNotification("Withdrawing collateral...", "info"); const withdrawTx = await this.vaultContract.withdrawCollateral(parsedAmount); await withdrawTx.wait(); this.elements.collateralAmountInput.value = ''; return "Collateral withdrawn successfully!"; }); },
