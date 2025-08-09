@@ -156,7 +156,3 @@ unpause()
 MIT
 
 ---
-
-If you want, I can also make a **dark-mode badge header banner** with your **WYT + pUSD logos** and place it above these badges so the README matches your branding instead of just having plain shields. That would make the repo look like a polished DeFi project page.
-
-Do you want me to design that branding header for you?
