@@ -81,7 +81,13 @@
         <div class="max-w-7xl mx-auto">
             <!-- Header -->
             <header class="flex justify-between items-center mb-8">
-                <h1 class="text-2xl sm:text-3xl font-bold text-white">WorkYield Lending Vault</h1>
+                <div class="flex items-center gap-6">
+                    <h1 class="text-2xl sm:text-3xl font-bold text-white">WorkYield Lending Vault</h1>
+                    <nav class="hidden sm:flex items-center gap-4">
+                        <a href="https://workyield.net/" target="_blank" class="text-gray-300 hover:text-orange-400 transition-colors">Home</a>
+                        <a href="https://workyield.net/app.html" target="_blank" class="text-gray-300 hover:text-orange-400 transition-colors">Dashboard</a>
+                    </nav>
+                </div>
                 <button id="connectButton" class="btn-brand text-white font-semibold py-2 px-4 rounded-lg shadow-md">
                     Connect Wallet
                 </button>
@@ -584,4 +590,4 @@ const LendingApp = {
 window.addEventListener('load', () => LendingApp.init());
 </script>
 </body>
-</ht
+</html>
