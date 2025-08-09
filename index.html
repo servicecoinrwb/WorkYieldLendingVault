@@ -9,14 +9,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS is used for layout, but our custom styles will override colors and fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
     
-    <!-- Link to your brand stylesheet -->
     <link rel="stylesheet" href="style.css">
     
-    <script src="lending.js?v=BRANDED_FINAL" defer></script>
+    <script src="lending.js?v=LOAN_OPTIONS" defer></script>
 </head>
 <body>
     <main class="container mx-auto max-w-7xl p-4 md:p-8">
@@ -29,12 +27,8 @@
         <section id="balanceInfo" class="mb-8 hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
                 <div class="bg-secondary p-4 rounded-lg">
-                    <p class="text-sm text-secondary">Your pUSD Balance</p>
-                    <div id="pUSDBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
-                </div>
-                <div class="bg-secondary p-4 rounded-lg">
-                    <p class="text-sm text-secondary">Your WYT Balance</p>
-                    <div id="wytBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
+                    <p class="text-sm text-secondary">pUSD Available to Borrow</p>
+                    <div id="vaultPusdAvailable" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
                 </div>
                 <div class="bg-secondary p-4 rounded-lg">
                     <p class="text-sm text-secondary">Your Deposited Collateral (WYT)</p>
@@ -44,19 +38,52 @@
                     <p class="text-sm text-secondary">Your Loan (pUSD)</p>
                     <div id="loanBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
                 </div>
+                <div class="bg-secondary p-4 rounded-lg">
+                    <p class="text-sm text-secondary">Your WYT Wallet Balance</p>
+                    <div id="wytBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
+                </div>
             </div>
         </section>
 
         <!-- Main Interaction Section -->
         <section id="lendingActions" class="mb-8 hidden">
-            <div class="mt-4 max-w-lg mx-auto bg-secondary p-6 rounded-lg">
+            <div class="mt-4 max-w-4xl mx-auto bg-secondary p-6 rounded-lg">
                 <div class="flex border-b border-gray-700 mb-4">
-                    <button id="depositTab" class="tab-btn active">Deposit/Withdraw Collateral</button>
-                    <button id="borrowTab" class="tab-btn">Borrow/Repay pUSD</button>
+                    <button id="borrowTab" class="tab-btn active">Borrow pUSD</button>
+                    <button id="depositTab" class="tab-btn">Manage Collateral</button>
+                    <button id="repayTab" class="tab-btn">Repay Loan</button>
                 </div>
 
+                <!-- Borrow Panel -->
+                <div id="borrowPanel">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Short Term Loan -->
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg">Short-Term Loan</h3>
+                            <p class="text-sm text-secondary mb-2">30 Days at 10% APR</p>
+                            <label for="shortTermAmount" class="sr-only">Short Term Loan Amount</label>
+                            <div class="flex items-center bg-secondary p-3 rounded-md mb-4">
+                                <input type="number" id="shortTermAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
+                                <span class="font-semibold text-gray-400">pUSD</span>
+                            </div>
+                            <button id="borrowShortTermButton" class="w-full btn btn-primary">Borrow</button>
+                        </div>
+                        <!-- Long Term Loan -->
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg">Long-Term Loan</h3>
+                            <p class="text-sm text-secondary mb-2">90 Days at 20% APR</p>
+                            <label for="longTermAmount" class="sr-only">Long Term Loan Amount</label>
+                            <div class="flex items-center bg-secondary p-3 rounded-md mb-4">
+                                <input type="number" id="longTermAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
+                                <span class="font-semibold text-gray-400">pUSD</span>
+                            </div>
+                            <button id="borrowLongTermButton" class="w-full btn btn-primary">Borrow</button>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Deposit/Withdraw Collateral Panel -->
-                <div id="depositPanel">
+                <div id="depositPanel" class="hidden">
                     <label for="collateralAmount" class="block mb-2 font-semibold">Amount of WYT Collateral</label>
                     <div class="flex items-center bg-gray-900 p-3 rounded-md mb-4">
                         <input type="number" id="collateralAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
@@ -68,17 +95,14 @@
                     </div>
                 </div>
 
-                <!-- Borrow/Repay Panel -->
-                <div id="borrowPanel" class="hidden">
-                    <label for="loanAmount" class="block mb-2 font-semibold">Amount of pUSD</label>
+                <!-- Repay Panel -->
+                <div id="repayPanel" class="hidden">
+                    <label for="repayAmount" class="block mb-2 font-semibold">Amount of pUSD to Repay</label>
                     <div class="flex items-center bg-gray-900 p-3 rounded-md mb-4">
-                        <input type="number" id="loanAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
+                        <input type="number" id="repayAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
                         <span class="font-semibold text-gray-400">pUSD</span>
                     </div>
-                    <div class="flex space-x-4">
-                        <button id="borrowButton" class="w-full btn btn-primary">Borrow pUSD</button>
-                        <button id="repayButton" class="w-full btn btn-secondary">Repay pUSD</button>
-                    </div>
+                    <button id="repayButton" class="w-full btn btn-secondary">Repay Full Loan</button>
                 </div>
             </div>
         </section>
