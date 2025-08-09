@@ -3,132 +3,565 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Yield - Lending Vault</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    
+    <title>WorkYield Lending Vault</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    
-    <link rel="stylesheet" href="style.css">
-    
-    <script src="lending.js?v=LOAN_OPTIONS_FIXED" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            color: #f3f4f6;
+        }
+        .glass-card {
+            background: rgba(31, 41, 55, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            transition: background-color 0.3s;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+        .btn-secondary {
+            background-color: #4f46e5;
+            transition: background-color 0.3s;
+        }
+        .btn-secondary:hover {
+            background-color: #4338ca;
+        }
+        .btn-danger {
+            background-color: #ef4444;
+            transition: background-color 0.3s;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        .tab.active {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.2);
+        }
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-weight: 500;
+        }
+        .notification-success { background-color: #22c55e; }
+        .notification-error { background-color: #ef4444; }
+        .notification-info { background-color: #3b82f6; }
+    </style>
 </head>
-<body>
-    <main class="container mx-auto max-w-7xl p-4 md:p-8">
-        <header class="flex justify-between items-center mb-10">
-            <h1 class="text-3xl font-bold text-white">Work Yield Lending Vault</h1>
-            <button id="connectButton" class="btn btn-primary">Connect Wallet</button>
-        </header>
+<body class="antialiased">
+    <div class="min-h-screen w-full p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-8">
+                <h1 class="text-2xl sm:text-3xl font-bold text-white">WorkYield Lending Vault</h1>
+                <button id="connectButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg shadow-md">
+                    Connect Wallet
+                </button>
+            </header>
 
-        <!-- Balance Info Section -->
-        <section id="balanceInfo" class="mb-8 hidden">
-            <!-- MODIFIED: Changed grid to handle 5 items gracefully -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
-                <div class="bg-secondary p-4 rounded-lg">
-                    <p class="text-sm text-secondary">pUSD Available to Borrow</p>
-                    <div id="vaultPusdAvailable" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
-                </div>
-                <div class="bg-secondary p-4 rounded-lg">
-                    <p class="text-sm text-secondary">Your Deposited Collateral (WYT)</p>
-                    <div id="collateralBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
-                </div>
-                <div class="bg-secondary p-4 rounded-lg">
-                    <p class="text-sm text-secondary">Your Loan (pUSD)</p>
-                    <div id="loanBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
-                </div>
-                <div class="bg-secondary p-4 rounded-lg">
-                    <p class="text-sm text-secondary">Your WYT Wallet Balance</p>
-                    <div id="wytBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
-                </div>
-                <!-- ADDED: The missing pUSD balance display card -->
-                <div class="bg-secondary p-4 rounded-lg">
-                    <p class="text-sm text-secondary">Your pUSD Wallet Balance</p>
-                    <div id="pUSDBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Main Interaction Section -->
-        <section id="lendingActions" class="mb-8 hidden">
-            <div class="mt-4 max-w-4xl mx-auto bg-secondary p-6 rounded-lg">
-                <div class="flex border-b border-gray-700 mb-4">
-                    <button id="borrowTab" class="tab-btn active">Borrow pUSD</button>
-                    <button id="depositTab" class="tab-btn">Manage Collateral</button>
-                    <button id="repayTab" class="tab-btn">Repay Loan</button>
+            <main id="dappContent" class="hidden">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass-card p-6">
+                        <h2 class="text-lg font-semibold text-gray-300 mb-2">My Wallet</h2>
+                        <p class="text-2xl font-bold"><span id="pUSDBalanceDisplay">0.00</span> pUSD</p>
+                        <p class="text-2xl font-bold"><span id="wytBalanceDisplay">0.00</span> WYT</p>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h2 class="text-lg font-semibold text-gray-300 mb-2">My Vault Position</h2>
+                        <p class="text-2xl font-bold"><span id="collateralBalanceDisplay">0.00</span> WYT Collateral</p>
+                        <p class="text-2xl font-bold text-red-400"><span id="loanBalanceDisplay">0.00</span> pUSD Debt</p>
+                    </div>
+                    <div class="glass-card p-6">
+                        <h2 class="text-lg font-semibold text-gray-300 mb-2">Protocol Stats</h2>
+                        <p class="text-2xl font-bold"><span id="vaultPusdAvailable">0.00</span> pUSD Available</p>
+                        <p class="text-2xl font-bold"><span id="totalBorrowsDisplay">0.00</span> pUSD Total Borrows</p>
+                    </div>
                 </div>
 
-                <!-- Borrow Panel -->
-                <div id="borrowPanel">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Short Term Loan -->
-                        <div class="bg-gray-900 p-4 rounded-lg">
-                            <h3 class="font-bold text-lg">Short-Term Loan</h3>
-                            <p class="text-sm text-secondary mb-2">30 Days at 10% APR</p>
-                            <label for="shortTermAmount" class="sr-only">Short Term Loan Amount</label>
-                            <div class="flex items-center bg-secondary p-3 rounded-md mb-4">
-                                <input type="number" id="shortTermAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
-                                <span class="font-semibold text-gray-400">pUSD</span>
+                <!-- Actions Card -->
+                <div class="glass-card p-6 sm:p-8">
+                    <!-- Tabs -->
+                    <div class="flex border-b border-gray-700 mb-6">
+                        <button id="depositTab" class="tab active py-3 px-6 text-lg font-medium border-b-2 border-transparent hover:text-blue-400">Manage Collateral</button>
+                        <button id="borrowTab" class="tab py-3 px-6 text-lg font-medium border-b-2 border-transparent hover:text-blue-400">Borrow</button>
+                        <button id="repayTab" class="tab py-3 px-6 text-lg font-medium border-b-2 border-transparent hover:text-blue-400">Repay</button>
+                    </div>
+
+                    <!-- Panels -->
+                    <div id="actionPanels">
+                        <!-- Deposit/Withdraw Panel -->
+                        <div id="depositPanel">
+                            <h3 class="text-xl font-semibold mb-4">Deposit or Withdraw WYT Collateral</h3>
+                            <div class="flex flex-col sm:flex-row items-center gap-4">
+                                <input type="number" id="collateralAmount" placeholder="Amount of WYT" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <button id="depositButton" class="w-full sm:w-auto btn-primary text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Deposit</button>
+                                <button id="withdrawButton" class="w-full sm:w-auto btn-secondary text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Withdraw</button>
                             </div>
-                            <button id="borrowShortTermButton" class="w-full btn btn-primary">Borrow</button>
                         </div>
-                        <!-- Long Term Loan -->
-                        <div class="bg-gray-900 p-4 rounded-lg">
-                            <h3 class="font-bold text-lg">Long-Term Loan</h3>
-                            <p class="text-sm text-secondary mb-2">90 Days at 20% APR</p>
-                            <label for="longTermAmount" class="sr-only">Long Term Loan Amount</label>
-                            <div class="flex items-center bg-secondary p-3 rounded-md mb-4">
-                                <input type="number" id="longTermAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
-                                <span class="font-semibold text-gray-400">pUSD</span>
+                        <!-- Borrow Panel -->
+                        <div id="borrowPanel" class="hidden">
+                             <h3 class="text-xl font-semibold mb-4">Borrow pUSD</h3>
+                            <div class="flex flex-col sm:flex-row items-center gap-4">
+                                <input type="number" id="borrowAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <button id="borrowButton" class="w-full sm:w-auto btn-primary text-white font-semibold py-2 px-6 rounded-lg">Borrow</button>
                             </div>
-                            <button id="borrowLongTermButton" class="w-full btn btn-primary">Borrow</button>
+                        </div>
+                        <!-- Repay Panel -->
+                        <div id="repayPanel" class="hidden">
+                            <h3 class="text-xl font-semibold mb-4">Repay pUSD Debt</h3>
+                            <div class="flex flex-col sm:flex-row items-center gap-4">
+                                <input type="number" id="repayAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                <button id="repayButton" class="w-full sm:w-auto btn-primary text-white font-semibold py-2 px-6 rounded-lg">Repay</button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Deposit/Withdraw Collateral Panel -->
-                <div id="depositPanel" class="hidden">
-                    <label for="collateralAmount" class="block mb-2 font-semibold">Amount of WYT Collateral</label>
-                    <div class="flex items-center bg-gray-900 p-3 rounded-md mb-4">
-                        <input type="number" id="collateralAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
-                        <span class="font-semibold text-gray-400">WYT</span>
-                    </div>
-                    <div class="flex space-x-4">
-                        <button id="depositButton" class="w-full btn btn-primary">Deposit Collateral</button>
-                        <button id="withdrawButton" class="w-full btn btn-secondary">Withdraw Collateral</button>
+                <!-- Liquidator Panel -->
+                <div id="liquidatorPanel" class="hidden mt-8 glass-card p-6 sm:p-8">
+                    <h2 class="text-xl font-bold mb-4 text-red-400">Liquidator Zone</h2>
+                     <div class="flex flex-col sm:flex-row items-center gap-4">
+                        <input type="text" id="liquidateAddress" placeholder="Borrower address to liquidate" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-red-500 focus:outline-none">
+                        <button id="liquidateButton" class="w-full sm:w-auto btn-danger text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Liquidate</button>
                     </div>
                 </div>
 
-                <!-- Repay Panel -->
-                <div id="repayPanel" class="hidden">
-                    <label for="repayAmount" class="block mb-2 font-semibold">Amount of pUSD to Repay</label>
-                    <div class="flex items-center bg-gray-900 p-3 rounded-md mb-4">
-                        <input type="number" id="repayAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
-                        <span class="font-semibold text-gray-400">pUSD</span>
+                <!-- Admin Panel -->
+                <div id="adminPanel" class="hidden mt-8 glass-card p-6 sm:p-8">
+                    <h2 class="text-xl font-bold mb-6 text-yellow-400">Admin Panel</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        <!-- Fund/Withdraw -->
+                        <div>
+                            <h3 class="font-semibold mb-2">Vault Funds</h3>
+                            <div class="flex items-center gap-4">
+                                <input type="number" id="fundAmount" placeholder="pUSD Amount" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
+                                <button id="fundVaultButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg whitespace-nowrap">Fund</button>
+                                <button id="withdrawVaultButton" class="btn-secondary text-white font-semibold py-2 px-4 rounded-lg whitespace-nowrap">Withdraw</button>
+                            </div>
+                        </div>
+                        <!-- Set LTV -->
+                        <div>
+                            <h3 class="font-semibold mb-2">Loan To Value (e.g., 5000 for 50%)</h3>
+                            <div class="flex items-center gap-4">
+                                <input type="number" id="ltvAmount" placeholder="New LTV" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
+                                <button id="setLtvButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg">Set</button>
+                            </div>
+                        </div>
+                        <!-- Set Interest Rate -->
+                        <div>
+                            <h3 class="font-semibold mb-2">Interest Rate (e.g., 500 for 5%)</h3>
+                            <div class="flex items-center gap-4">
+                                <input type="number" id="interestRateAmount" placeholder="New Rate" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
+                                <button id="setInterestRateButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg">Set</button>
+                            </div>
+                        </div>
+                        <!-- Set Liquidation Threshold -->
+                         <div>
+                            <h3 class="font-semibold mb-2">Liquidation Threshold (e.g., 8000 for 80%)</h3>
+                            <div class="flex items-center gap-4">
+                                <input type="number" id="liqThresholdAmount" placeholder="New Threshold" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
+                                <button id="setLiqThresholdButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg">Set</button>
+                            </div>
+                        </div>
+                        <!-- Set Liquidation Bonus -->
+                         <div>
+                            <h3 class="font-semibold mb-2">Liquidation Bonus (e.g., 500 for 5%)</h3>
+                            <div class="flex items-center gap-4">
+                                <input type="number" id="liqBonusAmount" placeholder="New Bonus" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4">
+                                <button id="setLiqBonusButton" class="btn-primary text-white font-semibold py-2 px-4 rounded-lg">Set</button>
+                            </div>
+                        </div>
                     </div>
-                    <button id="repayButton" class="w-full btn btn-secondary">Repay Full Loan</button>
                 </div>
-            </div>
-        </section>
-        
-        <!-- Admin Panel -->
-        <section id="adminPanel" class="mb-8 hidden">
-            <h2 class="text-xl font-bold">Admin Panel</h2>
-            <div class="mt-4 max-w-lg mx-auto bg-secondary p-6 rounded-lg">
-                 <label for="fundAmount" class="block mb-2 font-semibold">Fund Vault with pUSD</label>
-                 <div class="flex items-center bg-gray-900 p-3 rounded-md mb-4">
-                    <input type="number" id="fundAmount" placeholder="0.0" class="w-full bg-transparent focus:outline-none text-2xl text-white">
-                    <span class="font-semibold text-gray-400">pUSD</span>
-                </div>
-                <button id="fundVaultButton" class="w-full btn btn-primary">Fund Vault</button>
-            </div>
-        </section>
-        
-        <div class="text-center mt-12">
-            <a href="https://workyield.net/" class="footer-link">← Back to Main Dashboard</a>
+            </main>
         </div>
-    </main>
+    </div>
+
+<script>
+// --- CONFIGURATION ---
+const LENDING_VAULT_ADDRESS = '0x2D93a04ccE60697Eb35Ae4C62A0854481DB55e5a';
+const PUSD_ADDRESS = '0xdddD73F5Df1F0DC31373357beAC77545dC5A6f3F';
+const WYT_ADDRESS = '0xccF4eaa301058Ec5561a07Cc38A75F47a2912EA5';
+
+const PLUME_MAINNET = {
+    chainId: '0x18232',
+    chainName: 'Plume Testnet', // Note: This is likely a testnet address
+    nativeCurrency: { name: 'Plume', symbol: 'PLUME', decimals: 18 },
+    rpcUrls: ['https://testnet-rpc.plumenetwork.xyz/http'],
+    blockExplorerUrls: ['https://testnet-explorer.plumenetwork.xyz'],
+};
+
+// --- ABIs ---
+const LENDING_VAULT_ABI = [{"inputs":[{"internalType":"address","name":"_wytAddress","type":"address"},{"internalType":"address","name":"_pUSDAddress","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Borrowed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"CollateralDeposited","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"CollateralWithdrawn","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newRate","type":"uint256"}],"name":"InterestRateChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"liquidator","type":"address"},{"indexed":true,"internalType":"address","name":"borrower","type":"address"},{"indexed":false,"internalType":"uint256","name":"debtRepaid","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"collateralSeized","type":"uint256"}],"name":"Liquidated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newBonus","type":"uint256"}],"name":"LiquidationBonusChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newThreshold","type":"uint256"}],"name":"LiquidationThresholdChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"newLTV","type":"uint256"}],"name":"LoanToValueRatioChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"interestPaid","type":"uint256"}],"name":"Repaid","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"role","type":"bytes32"},{"indexed":true,"internalType":"bytes32","name":"previousAdminRole","type":"bytes32"},{"indexed":true,"internalType":"bytes32","name":"newAdminRole","type":"bytes32"}],"name":"RoleAdminChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"role","type":"bytes32"},{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"sender","type":"address"}],"name":"RoleGranted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"role","type":"bytes32"},{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"sender","type":"address"}],"name":"RoleRevoked","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Unpaused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"funder","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"VaultFunded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"admin","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"VaultFundsWithdrawn","type":"event"},{"inputs":[],"name":"DEFAULT_ADMIN_ROLE","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"LIQUIDATOR_ROLE","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"borrow","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"collateral","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"depositCollateral","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_pUSDAmount","type":"uint256"}],"name":"fundVault","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"getCollateralValue","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"getDebtWithInterest","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"}],"name":"getRoleAdmin","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"grantRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"hasRole","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"interestRate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"isHealthy","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_borrower","type":"address"}],"name":"liquidate","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"liquidationBonus","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"liquidationThreshold","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"loanToValueRatio","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"loans","outputs":[{"internalType":"uint256","name":"principal","type":"uint256"},{"internalType":"uint256","name":"lastUpdateTime","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"pUSD","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"pause","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"renounceRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"repay","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes32","name":"role","type":"bytes32"},{"internalType":"address","name":"account","type":"address"}],"name":"revokeRole","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_rate","type":"uint256"}],"name":"setInterestRate","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_bonus","type":"uint256"}],"name":"setLiquidationBonus","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_threshold","type":"uint256"}],"name":"setLiquidationThreshold","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_ltv","type":"uint256"}],"name":"setLoanToValueRatio","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"bytes4","name":"interfaceId","type":"bytes4"}],"name":"supportsInterface","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalBorrows","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"unpause","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"withdrawCollateral","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"withdrawVaultFunds","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"wyt","outputs":[{"internalType":"contract IWorkYieldToken","name":"","type":"address"}],"stateMutability":"view","type":"function"}];
+const ERC20_ABI = [ "function balanceOf(address account) view returns (uint256)", "function approve(address spender, uint256 amount) returns (bool)", "function allowance(address owner, address spender) view returns (uint256)", "function decimals() view returns (uint8)" ];
+
+const LendingApp = {
+    provider: null, signer: null, vaultContract: null, pusdContract: null, wytContract: null, userAddress: null, elements: {},
+
+    init() { this.cacheDOMElements(); this.addEventListeners(); this.checkExistingConnection(); },
+    
+    cacheDOMElements() {
+        this.elements = {
+            connectButton: document.getElementById('connectButton'),
+            dappContent: document.getElementById('dappContent'),
+            pUSDBalanceDisplay: document.getElementById('pUSDBalanceDisplay'),
+            wytBalanceDisplay: document.getElementById('wytBalanceDisplay'),
+            collateralBalanceDisplay: document.getElementById('collateralBalanceDisplay'),
+            loanBalanceDisplay: document.getElementById('loanBalanceDisplay'),
+            vaultPusdAvailable: document.getElementById('vaultPusdAvailable'),
+            totalBorrowsDisplay: document.getElementById('totalBorrowsDisplay'),
+            depositTab: document.getElementById('depositTab'),
+            borrowTab: document.getElementById('borrowTab'),
+            repayTab: document.getElementById('repayTab'),
+            depositPanel: document.getElementById('depositPanel'),
+            borrowPanel: document.getElementById('borrowPanel'),
+            repayPanel: document.getElementById('repayPanel'),
+            collateralAmountInput: document.getElementById('collateralAmount'),
+            borrowAmountInput: document.getElementById('borrowAmount'),
+            repayAmountInput: document.getElementById('repayAmount'),
+            depositButton: document.getElementById('depositButton'),
+            withdrawButton: document.getElementById('withdrawButton'),
+            borrowButton: document.getElementById('borrowButton'),
+            repayButton: document.getElementById('repayButton'),
+            liquidatorPanel: document.getElementById('liquidatorPanel'),
+            liquidateAddressInput: document.getElementById('liquidateAddress'),
+            liquidateButton: document.getElementById('liquidateButton'),
+            adminPanel: document.getElementById('adminPanel'),
+            fundAmountInput: document.getElementById('fundAmount'),
+            fundVaultButton: document.getElementById('fundVaultButton'),
+            withdrawVaultButton: document.getElementById('withdrawVaultButton'),
+            ltvAmountInput: document.getElementById('ltvAmount'),
+            setLtvButton: document.getElementById('setLtvButton'),
+            interestRateAmountInput: document.getElementById('interestRateAmount'),
+            setInterestRateButton: document.getElementById('setInterestRateButton'),
+            liqThresholdAmountInput: document.getElementById('liqThresholdAmount'),
+            setLiqThresholdButton: document.getElementById('setLiqThresholdButton'),
+            liqBonusAmountInput: document.getElementById('liqBonusAmount'),
+            setLiqBonusButton: document.getElementById('setLiqBonusButton'),
+        };
+    },
+    
+    addEventListeners() {
+        this.elements.connectButton?.addEventListener('click', () => this.connectWallet());
+        this.elements.depositTab?.addEventListener('click', () => this.switchTab('deposit'));
+        this.elements.borrowTab?.addEventListener('click', () => this.switchTab('borrow'));
+        this.elements.repayTab?.addEventListener('click', () => this.switchTab('repay'));
+        this.elements.depositButton?.addEventListener('click', (e) => this.depositCollateral(e));
+        this.elements.withdrawButton?.addEventListener('click', (e) => this.withdrawCollateral(e));
+        this.elements.borrowButton?.addEventListener('click', (e) => this.borrow(e));
+        this.elements.repayButton?.addEventListener('click', (e) => this.repay(e));
+        this.elements.liquidateButton?.addEventListener('click', (e) => this.liquidate(e));
+        this.elements.fundVaultButton?.addEventListener('click', (e) => this.fundVault(e));
+        this.elements.withdrawVaultButton?.addEventListener('click', e => this.withdrawVault(e));
+        this.elements.setLtvButton?.addEventListener('click', e => this.setLTV(e));
+        this.elements.setInterestRateButton?.addEventListener('click', e => this.setInterest(e));
+        this.elements.setLiqThresholdButton?.addEventListener('click', e => this.setLiqThreshold(e));
+        this.elements.setLiqBonusButton?.addEventListener('click', e => this.setLiqBonus(e));
+
+        if (window.ethereum) { 
+            window.ethereum.on('accountsChanged', () => this.connectWallet()); 
+            window.ethereum.on('chainChanged', () => window.location.reload()); 
+        }
+    },
+    
+    switchTab(tab) {
+        ['deposit', 'borrow', 'repay'].forEach(t => {
+            const tabEl = this.elements[`${t}Tab`];
+            const panelEl = this.elements[`${t}Panel`];
+            const isActive = t === tab;
+            tabEl?.classList.toggle('active', isActive);
+            panelEl?.classList.toggle('hidden', !isActive);
+        });
+    },
+    
+    async checkExistingConnection() { 
+        if (window.ethereum) { 
+            try { 
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' }); 
+                if (accounts.length > 0) await this.connectWallet(); 
+            } catch (error) { console.log('No existing connection'); } 
+        } 
+    },
+    
+    async connectWallet() {    
+        if (!window.ethereum) return this.showNotification('Please install a Web3 wallet.', 'error');    
+        try {    
+            await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: PLUME_MAINNET.chainId }] }).catch(async (err) => { if (err.code === 4902) { await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [PLUME_MAINNET] }); } });    
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });    
+            this.provider = new ethers.providers.Web3Provider(window.ethereum);
+            this.signer = this.provider.getSigner();    
+            this.userAddress = await this.signer.getAddress();    
+            this.vaultContract = new ethers.Contract(LENDING_VAULT_ADDRESS, LENDING_VAULT_ABI, this.signer);    
+            this.pusdContract = new ethers.Contract(PUSD_ADDRESS, ERC20_ABI, this.signer);    
+            this.wytContract = new ethers.Contract(WYT_ADDRESS, ERC20_ABI, this.signer);    
+            
+            const shortAddress = `${this.userAddress.slice(0, 6)}...${this.userAddress.slice(-4)}`;    
+            this.elements.connectButton.textContent = `Connected: ${shortAddress}`;    
+            this.elements.connectButton.disabled = true;    
+            this.elements.dappContent.classList.remove('hidden');    
+            
+            const adminRole = await this.vaultContract.DEFAULT_ADMIN_ROLE();
+            const liquidatorRole = await this.vaultContract.LIQUIDATOR_ROLE();
+            const [isAdmin, isLiquidator] = await Promise.all([
+                this.vaultContract.hasRole(adminRole, this.userAddress),
+                this.vaultContract.hasRole(liquidatorRole, this.userAddress)
+            ]);
+
+            if (isAdmin) this.elements.adminPanel.classList.remove('hidden'); 
+            if (isLiquidator) this.elements.liquidatorPanel.classList.remove('hidden');
+            
+            this.showNotification('Wallet connected!', 'success');    
+            await this.updateBalances();    
+        } catch (err) {    
+            this.showNotification(err.message || 'Connection failed.', 'error');    
+        }    
+    },
+    
+    async updateBalances() { 
+        try { 
+            const [userPusd, userWyt, userCollateral, userLoan, vaultPusd, totalBorrows, pusdDec, wytDec] = await Promise.all([ 
+                this.pusdContract.balanceOf(this.userAddress), 
+                this.wytContract.balanceOf(this.userAddress), 
+                this.vaultContract.collateral(this.userAddress), 
+                this.vaultContract.getDebtWithInterest(this.userAddress), 
+                this.pusdContract.balanceOf(LENDING_VAULT_ADDRESS), 
+                this.vaultContract.totalBorrows(),
+                this.pusdContract.decimals(), 
+                this.wytContract.decimals(), 
+            ]); 
+            this.elements.pUSDBalanceDisplay.innerText = this.formatTokenValue(userPusd, pusdDec); 
+            this.elements.wytBalanceDisplay.innerText = this.formatTokenValue(userWyt, wytDec); 
+            this.elements.collateralBalanceDisplay.innerText = this.formatTokenValue(userCollateral, wytDec); 
+            this.elements.loanBalanceDisplay.innerText = this.formatTokenValue(userLoan, pusdDec); 
+            this.elements.vaultPusdAvailable.innerText = this.formatTokenValue(vaultPusd, pusdDec); 
+            this.elements.totalBorrowsDisplay.innerText = this.formatTokenValue(totalBorrows, pusdDec);
+        } catch (err) { 
+            console.error("Failed to update balances:", err); 
+            this.showNotification("Could not load balance data.", "error"); 
+        } 
+    },
+
+    async handleTransaction(event, transactionCallback, inputToClear = null) {
+        const button = event.target;
+        this.setButtonLoading(button, true);
+        try {
+            const successMessage = await transactionCallback();
+            this.showNotification(successMessage, 'success');
+            if(inputToClear) inputToClear.value = '';
+            await this.updateBalances();
+        } catch (error) {
+            let errorMessage = 'Transaction failed.';
+            if (error.code === 4001) {
+                errorMessage = 'Transaction rejected by user.';
+            } else if (error.reason) {
+                errorMessage = error.reason;
+            } else if (error.data?.message) {
+                errorMessage = error.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            this.showNotification(errorMessage.replace('execution reverted: ', ''), 'error');
+        } finally {
+            this.setButtonLoading(button, false);
+        }
+    },
+
+    async depositCollateral(event) { 
+        const amount = this.elements.collateralAmountInput.value; 
+        if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); 
+        await this.handleTransaction(event, async () => { 
+            const wytDecimals = await this.wytContract.decimals(); 
+            const parsedAmount = ethers.utils.parseUnits(amount, wytDecimals); 
+            this.showNotification("Approving WYT spend...", "info"); 
+            const approveTx = await this.wytContract.approve(LENDING_VAULT_ADDRESS, parsedAmount); 
+            await approveTx.wait(); 
+            this.showNotification("Approval successful! Depositing collateral...", "info"); 
+            const depositTx = await this.vaultContract.depositCollateral(parsedAmount); 
+            await depositTx.wait(); 
+            return "Collateral deposited successfully!"; 
+        }, this.elements.collateralAmountInput); 
+    },
+    
+    async withdrawCollateral(event) { 
+        const amount = this.elements.collateralAmountInput.value; 
+        if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); 
+        await this.handleTransaction(event, async () => { 
+            const wytDecimals = await this.wytContract.decimals(); 
+            const parsedAmount = ethers.utils.parseUnits(amount, wytDecimals); 
+            this.showNotification("Withdrawing collateral...", "info"); 
+            const withdrawTx = await this.vaultContract.withdrawCollateral(parsedAmount); 
+            await withdrawTx.wait(); 
+            return "Collateral withdrawn successfully!"; 
+        }, this.elements.collateralAmountInput); 
+    },
+    
+    async borrow(event) { 
+        const amount = this.elements.borrowAmountInput.value; 
+        if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); 
+        await this.handleTransaction(event, async () => { 
+            const pusdDecimals = await this.pusdContract.decimals(); 
+            const parsedAmount = ethers.utils.parseUnits(amount, pusdDecimals); 
+            this.showNotification("Borrowing pUSD...", "info"); 
+            const borrowTx = await this.vaultContract.borrow(parsedAmount); 
+            await borrowTx.wait(); 
+            return "Borrow successful!"; 
+        }, this.elements.borrowAmountInput); 
+    },
+    
+    async repay(event) { 
+        const amount = this.elements.repayAmountInput.value; 
+        if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); 
+        await this.handleTransaction(event, async () => { 
+            const pusdDecimals = await this.pusdContract.decimals(); 
+            const parsedAmount = ethers.utils.parseUnits(amount, pusdDecimals); 
+            this.showNotification("Approving pUSD spend...", "info"); 
+            const approveTx = await this.pusdContract.approve(LENDING_VAULT_ADDRESS, parsedAmount); 
+            await approveTx.wait(); 
+            this.showNotification("Approval successful! Repaying loan...", "info"); 
+            const repayTx = await this.vaultContract.repay(parsedAmount); 
+            await repayTx.wait(); 
+            return "Repayment successful!"; 
+        }, this.elements.repayAmountInput); 
+    },
+
+    async liquidate(event) {
+        const address = this.elements.liquidateAddressInput.value;
+        if (!ethers.utils.isAddress(address)) return this.showNotification("Please enter a valid borrower address.", "error");
+        await this.handleTransaction(event, async () => {
+            this.showNotification("Attempting to liquidate position...", "info");
+            const liquidateTx = await this.vaultContract.liquidate(address);
+            await liquidateTx.wait();
+            return "Liquidation successful!";
+        }, this.elements.liquidateAddressInput);
+    },
+    
+    async fundVault(event) { 
+        const amount = this.elements.fundAmountInput.value; 
+        if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); 
+        await this.handleTransaction(event, async () => { 
+            const pusdDecimals = await this.pusdContract.decimals(); 
+            const parsedAmount = ethers.utils.parseUnits(amount, pusdDecimals); 
+            this.showNotification("Approving pUSD spend...", "info"); 
+            const approveTx = await this.pusdContract.approve(LENDING_VAULT_ADDRESS, parsedAmount); 
+            await approveTx.wait(); 
+            this.showNotification("Approval successful! Funding vault...", "info"); 
+            const fundTx = await this.vaultContract.fundVault(parsedAmount); 
+            await fundTx.wait(); 
+            return "Vault funded successfully!"; 
+        }, this.elements.fundAmountInput); 
+    },
+
+    async withdrawVault(event) {
+        const amount = this.elements.fundAmountInput.value;
+        if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error");
+        await this.handleTransaction(event, async () => {
+            const pusdDecimals = await this.pusdContract.decimals();
+            const parsedAmount = ethers.utils.parseUnits(amount, pusdDecimals);
+            this.showNotification("Withdrawing surplus funds from vault...", "info");
+            const withdrawTx = await this.vaultContract.withdrawVaultFunds(parsedAmount);
+            await withdrawTx.wait();
+            return "Vault funds withdrawn successfully!";
+        }, this.elements.fundAmountInput);
+    },
+
+    async setLTV(event) {
+        const ltv = this.elements.ltvAmountInput.value;
+        if (!ltv || parseInt(ltv) <= 0) return this.showNotification("Please enter a valid LTV.", "error");
+        await this.handleTransaction(event, async () => {
+            const tx = await this.vaultContract.setLoanToValueRatio(ltv);
+            await tx.wait();
+            return "LTV updated successfully!";
+        }, this.elements.ltvAmountInput);
+    },
+    
+    async setInterest(event) {
+        const rate = this.elements.interestRateAmountInput.value;
+        if (!rate || parseInt(rate) < 0) return this.showNotification("Please enter a valid interest rate.", "error");
+        await this.handleTransaction(event, async () => {
+            const tx = await this.vaultContract.setInterestRate(rate);
+            await tx.wait();
+            return "Interest rate updated successfully!";
+        }, this.elements.interestRateAmountInput);
+    },
+
+    async setLiqThreshold(event) {
+        const threshold = this.elements.liqThresholdAmountInput.value;
+        if (!threshold || parseInt(threshold) <= 0) return this.showNotification("Please enter a valid threshold.", "error");
+        await this.handleTransaction(event, async () => {
+            const tx = await this.vaultContract.setLiquidationThreshold(threshold);
+            await tx.wait();
+            return "Liquidation threshold updated successfully!";
+        }, this.elements.liqThresholdAmountInput);
+    },
+
+    async setLiqBonus(event) {
+        const bonus = this.elements.liqBonusAmountInput.value;
+        if (!bonus || parseInt(bonus) < 0) return this.showNotification("Please enter a valid bonus.", "error");
+        await this.handleTransaction(event, async () => {
+            const tx = await this.vaultContract.setLiquidationBonus(bonus);
+            await tx.wait();
+            return "Liquidation bonus updated successfully!";
+        }, this.elements.liqBonusAmountInput);
+    },
+
+    setButtonLoading(button, isLoading) { 
+        if (!button) return; 
+        if (isLoading) { 
+            button.disabled = true; 
+            button.dataset.originalText = button.textContent; 
+            button.innerHTML = '<span class="spinner"></span> Processing...'; 
+        } else { 
+            button.disabled = false; 
+            button.textContent = button.dataset.originalText || 'Submit'; 
+        } 
+    },
+    
+    showNotification(message, type = 'info') { 
+        const notification = document.createElement('div'); 
+        notification.className = `notification notification-${type}`; 
+        notification.textContent = message; 
+        document.body.appendChild(notification); 
+        setTimeout(() => { if (notification.parentNode) notification.parentNode.removeChild(notification); }, 5000); 
+        console.log(`[${type.toUpperCase()}] ${message}`); 
+    },
+    
+    formatTokenValue(value, decimals) { 
+        try { 
+            const formatted = ethers.utils.formatUnits(value, decimals); 
+            const number = parseFloat(formatted); 
+            return number.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }); 
+        } catch (error) { return '0.00'; } 
+    }
+};
+
+window.addEventListener('load', () => LendingApp.init());
+</script>
 </body>
 </html>
