@@ -23,10 +23,14 @@ const LendingApp = {
         this.elements = {
             connectButton: document.getElementById('connectButton'), balanceInfo: document.getElementById('balanceInfo'), lendingActions: document.getElementById('lendingActions'),
             pUSDBalanceDisplay: document.getElementById('pUSDBalanceDisplay'), wytBalanceDisplay: document.getElementById('wytBalanceDisplay'), collateralBalanceDisplay: document.getElementById('collateralBalanceDisplay'),
-            loanBalanceDisplay: document.getElementById('loanBalanceDisplay'), depositTab: document.getElementById('depositTab'), borrowTab: document.getElementById('borrowTab'),
-            depositPanel: document.getElementById('depositPanel'), borrowPanel: document.getElementById('borrowPanel'), collateralAmountInput: document.getElementById('collateralAmount'),
-            loanAmountInput: document.getElementById('loanAmount'), depositButton: document.getElementById('depositButton'), withdrawButton: document.getElementById('withdrawButton'),
-            borrowButton: document.getElementById('borrowButton'), repayButton: document.getElementById('repayButton'), adminPanel: document.getElementById('adminPanel'),
+            loanBalanceDisplay: document.getElementById('loanBalanceDisplay'), vaultPusdAvailable: document.getElementById('vaultPusdAvailable'),
+            depositTab: document.getElementById('depositTab'), borrowTab: document.getElementById('borrowTab'), repayTab: document.getElementById('repayTab'),
+            depositPanel: document.getElementById('depositPanel'), borrowPanel: document.getElementById('borrowPanel'), repayPanel: document.getElementById('repayPanel'),
+            collateralAmountInput: document.getElementById('collateralAmount'), shortTermAmountInput: document.getElementById('shortTermAmount'),
+            longTermAmountInput: document.getElementById('longTermAmount'), repayAmountInput: document.getElementById('repayAmount'),
+            depositButton: document.getElementById('depositButton'), withdrawButton: document.getElementById('withdrawButton'),
+            borrowShortTermButton: document.getElementById('borrowShortTermButton'), borrowLongTermButton: document.getElementById('borrowLongTermButton'),
+            repayButton: document.getElementById('repayButton'), adminPanel: document.getElementById('adminPanel'),
             fundAmountInput: document.getElementById('fundAmount'), fundVaultButton: document.getElementById('fundVaultButton'),
         };
     },
@@ -34,29 +38,31 @@ const LendingApp = {
         this.elements.connectButton?.addEventListener('click', () => this.connectWallet());
         this.elements.depositTab?.addEventListener('click', () => this.switchTab('deposit'));
         this.elements.borrowTab?.addEventListener('click', () => this.switchTab('borrow'));
+        this.elements.repayTab?.addEventListener('click', () => this.switchTab('repay'));
         this.elements.depositButton?.addEventListener('click', (e) => this.depositCollateral(e));
         this.elements.withdrawButton?.addEventListener('click', (e) => this.withdrawCollateral(e));
-        this.elements.borrowButton?.addEventListener('click', (e) => this.borrow(e));
+        this.elements.borrowShortTermButton?.addEventListener('click', (e) => this.borrow(e, 'short'));
+        this.elements.borrowLongTermButton?.addEventListener('click', (e) => this.borrow(e, 'long'));
         this.elements.repayButton?.addEventListener('click', (e) => this.repay(e));
         this.elements.fundVaultButton?.addEventListener('click', (e) => this.fundVault(e));
         if (window.ethereum) { window.ethereum.on('accountsChanged', () => this.connectWallet()); window.ethereum.on('chainChanged', () => window.location.reload()); }
     },
-    switchTab(tab) { const isDeposit = tab === 'deposit'; this.elements.depositTab?.classList.toggle('active', isDeposit); this.elements.borrowTab?.classList.toggle('active', !isDeposit); this.elements.depositPanel?.classList.toggle('hidden', !isDeposit); this.elements.borrowPanel?.classList.toggle('hidden', isDeposit); },
+    switchTab(tab) {
+        ['deposit', 'borrow', 'repay'].forEach(t => {
+            const tabEl = this.elements[`${t}Tab`];
+            const panelEl = this.elements[`${t}Panel`];
+            const isActive = t === tab;
+            tabEl?.classList.toggle('active', isActive);
+            panelEl?.classList.toggle('hidden', !isActive);
+        });
+    },
     async checkExistingConnection() { if (window.ethereum) { try { const accounts = await window.ethereum.request({ method: 'eth_accounts' }); if (accounts.length > 0) await this.connectWallet(); } catch (error) { console.log('No existing connection'); } } },
     async connectWallet() { 
         if (!window.ethereum) return this.showNotification('Please install a Web3 wallet.', 'error'); 
         try { 
             await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: PLUME_MAINNET.chainId }] }).catch(async (err) => { if (err.code === 4902) { await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [PLUME_MAINNET] }); } }); 
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }); 
-            
-            // --- THIS IS THE FIX ---
-            // Explicitly tell Ethers.js about the Plume network to prevent ENS errors.
-            this.provider = new ethers.providers.Web3Provider(window.ethereum, {
-                name: PLUME_MAINNET.chainName,
-                chainId: parseInt(PLUME_MAINNET.chainId, 16)
-            });
-            // --- END OF FIX ---
-
+            this.provider = new ethers.providers.Web3Provider(window.ethereum, { name: PLUME_MAINNET.chainName, chainId: parseInt(PLUME_MAINNET.chainId, 16) });
             this.signer = this.provider.getSigner(); 
             this.userAddress = await this.signer.getAddress(); 
             this.vaultContract = new ethers.Contract(LENDING_VAULT_ADDRESS, LENDING_VAULT_ABI, this.signer); 
@@ -75,11 +81,11 @@ const LendingApp = {
             this.showNotification(err.message || 'Connection failed.', 'error'); 
         } 
     },
-    async updateBalances() { try { const [userPusd, userWyt, userCollateral, userLoan, pusdDec, wytDec] = await Promise.all([ this.pusdContract.balanceOf(this.userAddress), this.wytContract.balanceOf(this.userAddress), this.vaultContract.collateral(this.userAddress), this.vaultContract.getDebtWithInterest(this.userAddress), this.pusdContract.decimals(), this.wytContract.decimals(), ]); this.elements.pUSDBalanceDisplay.innerText = this.formatTokenValue(userPusd, pusdDec); this.elements.wytBalanceDisplay.innerText = this.formatTokenValue(userWyt, wytDec); this.elements.collateralBalanceDisplay.innerText = this.formatTokenValue(userCollateral, wytDec); this.elements.loanBalanceDisplay.innerText = this.formatTokenValue(userLoan, pusdDec); } catch (err) { console.error("Failed to update balances:", err); this.showNotification("Could not load balance data.", "error"); } },
+    async updateBalances() { try { const [userPusd, userWyt, userCollateral, userLoan, vaultPusd, pusdDec, wytDec] = await Promise.all([ this.pusdContract.balanceOf(this.userAddress), this.wytContract.balanceOf(this.userAddress), this.vaultContract.collateral(this.userAddress), this.vaultContract.getDebtWithInterest(this.userAddress), this.pusdContract.balanceOf(LENDING_VAULT_ADDRESS), this.pusdContract.decimals(), this.wytContract.decimals(), ]); this.elements.pUSDBalanceDisplay.innerText = this.formatTokenValue(userPusd, pusdDec); this.elements.wytBalanceDisplay.innerText = this.formatTokenValue(userWyt, wytDec); this.elements.collateralBalanceDisplay.innerText = this.formatTokenValue(userCollateral, wytDec); this.elements.loanBalanceDisplay.innerText = this.formatTokenValue(userLoan, pusdDec); this.elements.vaultPusdAvailable.innerText = this.formatTokenValue(vaultPusd, pusdDec); } catch (err) { console.error("Failed to update balances:", err); this.showNotification("Could not load balance data.", "error"); } },
     async depositCollateral(event) { const amount = this.elements.collateralAmountInput.value; if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); await this.handleTransaction(event, async () => { const wytDecimals = await this.wytContract.decimals(); const parsedAmount = ethers.utils.parseUnits(amount, wytDecimals); this.showNotification("Approving WYT spend...", "info"); const approveTx = await this.wytContract.approve(LENDING_VAULT_ADDRESS, parsedAmount); await approveTx.wait(); this.showNotification("Approval successful! Depositing collateral...", "info"); const depositTx = await this.vaultContract.depositCollateral(parsedAmount); await depositTx.wait(); this.elements.collateralAmountInput.value = ''; return "Collateral deposited successfully!"; }); },
     async withdrawCollateral(event) { const amount = this.elements.collateralAmountInput.value; if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); await this.handleTransaction(event, async () => { const wytDecimals = await this.wytContract.decimals(); const parsedAmount = ethers.utils.parseUnits(amount, wytDecimals); this.showNotification("Withdrawing collateral...", "info"); const withdrawTx = await this.vaultContract.withdrawCollateral(parsedAmount); await withdrawTx.wait(); this.elements.collateralAmountInput.value = ''; return "Collateral withdrawn successfully!"; }); },
-    async borrow(event) { const amount = this.elements.loanAmountInput.value; if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); await this.handleTransaction(event, async () => { const pusdDecimals = await this.pusdContract.decimals(); const parsedAmount = ethers.utils.parseUnits(amount, pusdDecimals); this.showNotification("Borrowing pUSD...", "info"); const borrowTx = await this.vaultContract.borrow(parsedAmount); await borrowTx.wait(); this.elements.loanAmountInput.value = ''; return "Borrow successful!"; }); },
-    async repay(event) { const amount = this.elements.loanAmountInput.value; if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); await this.handleTransaction(event, async () => { const pusdDecimals = await this.pusdContract.decimals(); const parsedAmount = ethers.utils.parseUnits(amount, pusdDecimals); this.showNotification("Approving pUSD spend...", "info"); const approveTx = await this.pusdContract.approve(LENDING_VAULT_ADDRESS, parsedAmount); await approveTx.wait(); this.showNotification("Approval successful! Repaying loan...", "info"); const repayTx = await this.vaultContract.repay(parsedAmount); await repayTx.wait(); this.elements.loanAmountInput.value = ''; return "Repayment successful!"; }); },
+    async borrow(event, term) { const amountInput = term === 'short' ? this.elements.shortTermAmountInput : this.elements.longTermAmountInput; const amount = amountInput.value; if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); await this.handleTransaction(event, async () => { const pusdDecimals = await this.pusdContract.decimals(); const parsedAmount = ethers.utils.parseUnits(amount, pusdDecimals); this.showNotification("Borrowing pUSD...", "info"); const borrowTx = await this.vaultContract.borrow(parsedAmount); await borrowTx.wait(); amountInput.value = ''; return "Borrow successful!"; }); },
+    async repay(event) { const amount = this.elements.repayAmountInput.value; if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); await this.handleTransaction(event, async () => { const pusdDecimals = await this.pusdContract.decimals(); const parsedAmount = ethers.utils.parseUnits(amount, pusdDecimals); this.showNotification("Approving pUSD spend...", "info"); const approveTx = await this.pusdContract.approve(LENDING_VAULT_ADDRESS, parsedAmount); await approveTx.wait(); this.showNotification("Approval successful! Repaying loan...", "info"); const repayTx = await this.vaultContract.repay(parsedAmount); await repayTx.wait(); this.elements.repayAmountInput.value = ''; return "Repayment successful!"; }); },
     async fundVault(event) { const amount = this.elements.fundAmountInput.value; if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); await this.handleTransaction(event, async () => { const pusdDecimals = await this.pusdContract.decimals(); const parsedAmount = ethers.utils.parseUnits(amount, pusdDecimals); this.showNotification("Approving pUSD spend...", "info"); const approveTx = await this.pusdContract.approve(LENDING_VAULT_ADDRESS, parsedAmount); await approveTx.wait(); this.showNotification("Approval successful! Funding vault...", "info"); const fundTx = await this.vaultContract.fundVault(parsedAmount); await fundTx.wait(); this.elements.fundAmountInput.value = ''; return "Vault funded successfully!"; }); },
 
     async handleTransaction(event, transactionCallback) { const button = event.target; this.setButtonLoading(button, true); try { const successMessage = await transactionCallback(); this.showNotification(successMessage, 'success'); await this.updateBalances(); } catch (error) { let errorMessage = 'Transaction failed.'; if (error.code === 4001) errorMessage = 'Transaction rejected by user.'; else if (error.data?.message) errorMessage = error.data.message; else if (error.message) errorMessage = error.message; this.showNotification(errorMessage, 'error'); } finally { this.setButtonLoading(button, false); } },
