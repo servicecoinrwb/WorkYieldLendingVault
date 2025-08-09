@@ -1,0 +1,150 @@
+/* Base styles to match your brand's dark theme */
+body {
+    background-color: #1a202c; /* Dark Navy/Charcoal */
+    color: #edf2f7; /* Light Gray */
+    font-family: 'Inter', sans-serif; /* Assuming a modern sans-serif font */
+}
+
+/* Define the secondary background color for panels */
+.bg-secondary {
+    background-color: #2d3748; /* Slightly lighter navy/charcoal */
+}
+
+/* Text color for secondary text elements */
+.text-secondary {
+    color: #a0aec0; /* Medium Gray */
+}
+
+/* General component styles */
+h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    border-bottom: 1px solid #4a5568;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+input[type="number"], input[type="text"] {
+    background-color: #1a202c;
+    border: 1px solid #4a5568;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    width: 100%;
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background-color: #dd6b20; /* Brand Orange */
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: #c05621; /* Darker Orange */
+}
+
+.btn-secondary {
+    background-color: #4a5568; /* Gray */
+    color: #ffffff;
+}
+
+.btn-secondary:hover {
+    background-color: #2d3748;
+}
+
+/* Tab Styles */
+.tab-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background-color: transparent;
+    color: #a0aec0; /* gray-500 */
+    cursor: pointer;
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.tab-btn.active {
+    color: #ffffff;
+    border-bottom-color: #dd6b20; /* Brand Orange */
+}
+
+/* Link Styles */
+.footer-link {
+    color: #dd6b20;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-link:hover {
+    color: #c05621;
+}
+
+/* Skeleton loader for a better loading experience */
+.skeleton {
+    background-color: #4a5568;
+    border-radius: 0.25rem;
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .5;
+    }
+}
+
+/* Spinner for loading states on buttons */
+.spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Notification Styles */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 1000;
+    max-width: 300px;
+    word-wrap: break-word;
+    animation: slideIn 0.3s ease-out;
+}
+
+.notification-success { background-color: #10b981; }
+.notification-error { background-color: #ef4444; }
+.notification-info { background-color: #3b82f6; }
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
