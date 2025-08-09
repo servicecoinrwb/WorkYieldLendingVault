@@ -145,7 +145,6 @@ unpause()
 * **Backing-based pricing** reduces oracle manipulation risk
 * **Role-gated functions** for admin & liquidators
 * **Pausable** in emergencies
-* **External audit** recommended before mainnet launch
 
 ---
 
