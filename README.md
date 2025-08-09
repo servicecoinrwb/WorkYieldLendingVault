@@ -1,136 +1,162 @@
-Work Yield Lending Vault
-A decentralized lending platform where WYT (Work Yield Token) holders can borrow pUSD against their positions. The vault includes a liquidation mechanism to ensure solvency and is funded by protocol revenue and borrower interest, creating a self-sustaining loop.
+Perfect — here’s your **Work Yield Lending Vault** README with **GitHub-style badges** in the header so it looks clean and professional at a glance:
 
-TL;DR
-Deposit WYT → Borrow pUSD without selling your assets.
+---
 
-Flexible borrowing with a clear, variable interest rate.
+# 🏦 Work Yield Lending Vault
 
-Protocol-funded liquidity via revenue and recycled interest payments.
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+![Network](https://img.shields.io/badge/network-Plume-blue)
+![Contract Status](https://img.shields.io/badge/status-Deployed-success)
+![Version](https://img.shields.io/badge/version-1.0.0-orange)
 
-Liquidation system to maintain protocol health and protect lenders.
+*A decentralized lending platform where **WYT** (Work Yield Token) holders can borrow **pUSD** against their collateral. Includes a liquidation system to ensure solvency and is funded by protocol revenue + borrower interest, creating a self-sustaining loop.*
 
-On-chain health checks using WYT's intrinsic backing value for safe LTV.
+---
 
-Key Features
-Borrow Against Your Assets: Lock WYT as collateral to get instant pUSD liquidity.
+## 📌 TL;DR
 
-Protocol-Funded Liquidity: The vault is funded by protocol revenue (e.g., from WYT redemptions) and interest payments that are recycled back into the lending pool.
+* 💰 **Deposit WYT → Borrow pUSD** without selling your assets
+* 📈 Flexible borrowing with **variable interest rate**
+* 🔄 **Protocol-funded liquidity** from revenue + recycled interest
+* 🛡 **Liquidation system** to protect lenders & protocol
+* 📊 On-chain health checks using **WYT’s intrinsic backing value** for safe LTV
 
-On-Chain Health & Liquidations: The protocol uses WYT’s intrinsic backing value for collateral pricing, ensuring loans remain safely over-collateralized. A built-in liquidation system allows authorized liquidators to repay unhealthy debt in exchange for collateral, securing the vault.
+---
 
-How It Works
-Deposit Collateral
-Users deposit WYT into the vault, where the tokens are locked as collateral.
+## ✨ Key Features
 
-Borrow pUSD
-Borrow up to the configured Loan-to-Value (LTV) ratio of your WYT collateral's value.
+* **Borrow Against Your Assets** — Lock WYT as collateral for instant pUSD liquidity.
+* **Protocol-Funded Liquidity** — Pool funded by protocol revenue (e.g., WYT redemption fees) and borrower interest.
+* **On-Chain Health & Liquidations** — Uses WYT’s **intrinsic backing value** for collateral pricing; liquidations are triggered when loans become unsafe.
 
-Repay Loan
-Repay the principal plus any accrued interest at any time to unlock your WYT collateral.
+---
 
-Liquidation
-If a borrower's collateral value drops and their position becomes unhealthy (i.e., exceeds the liquidationThreshold), an authorized liquidator can repay the debt. In return, they receive the borrower's collateral plus a bonus, ensuring the vault remains solvent.
+## 🔍 How It Works
 
-Vault Funding
+```
+1️⃣ Deposit WYT → Locked as collateral
+2️⃣ Borrow pUSD → Up to Loan-to-Value (LTV) limit
+3️⃣ Repay Loan → Principal + accrued interest
+4️⃣ Liquidation → If collateral value falls below threshold, liquidators repay debt and receive collateral + bonus
+```
 
-Interest Payments → Returned directly to the vault's liquidity pool.
+### Architecture Diagram
 
-Protocol Revenue → Admins can call fundVault(pUSDAmount) to add external funds (e.g., from WYT redemption fees).
+```
+        +------------------------+
+        |  WorkYield Protocol    |
+        | (redemption fees)      |
+        +-----------+------------+
+                    |
+                    v
+            fundVault(pUSD)
+                    |
+        +-----------v------------+
+        |   Lending Vault         |
+        |   (pUSD Liquidity)      |
+        +-----+-----------+-------+
+              |           |
+   deposit(WYT)    borrow/repay(pUSD)
+              |           |
+              v           v
+        +---------+  +-----------+
+        |  User   |  | Liquidator|
+        +---------+  +-----------+
+```
 
-Contracts
-WorkYieldLendingVault: 0x2D93a04ccE60697Eb35Ae4C62A0854481DB55e5a
+---
 
-WYT (ERC-20): 0xccF4eaa301058Ec5561a07Cc38A75F47a2912EA5
+## 🛠 Vault Funding
 
-pUSD (ERC-20): 0xdddD73F5Df1F0DC31373357beAC77545dC5A6f3F
+* **Interest Payments** → Returned directly to the liquidity pool
+* **Protocol Revenue** → Admins call `fundVault(pUSDAmount)` to add pUSD from other sources (e.g., redemption fees)
 
-Frontend dApp
-The index.html file provides a user-friendly interface to:
+---
 
-Connect Wallet (Plume Network).
+## 📜 Contract Addresses
 
-View balances (pUSD, WYT), deposited collateral, and current loan details.
+| Contract              | Address                                      |
+| --------------------- | -------------------------------------------- |
+| WorkYieldLendingVault | `0x2D93a04ccE60697Eb35Ae4C62A0854481DB55e5a` |
+| WYT (ERC-20)          | `0xccF4eaa301058Ec5561a07Cc38A75F47a2912EA5` |
+| pUSD (ERC-20)         | `0xdddD73F5Df1F0DC31373357beAC77545dC5A6f3F` |
 
-Manage Collateral: Deposit and withdraw WYT.
+---
 
-Borrow & Repay: Take out or pay back pUSD loans.
+## 💻 Frontend dApp
 
-Liquidator Zone: A dedicated section for authorized liquidators to act on unhealthy positions.
+The **index.html** file lets users:
 
-Admin Panel: For authorized admins to manage risk parameters and fund the vault.
+* 🔗 **Connect Wallet** (Plume Network)
+* 📊 **View Balances** — pUSD, WYT, collateral, active loans
+* 📥 **Manage Collateral** — Deposit / withdraw WYT
+* 💵 **Borrow & Repay** — Take or repay loans
+* 🛠 **Liquidator Zone** — For authorized liquidators to act on unhealthy positions
+* 🏛 **Admin Panel** — Manage risk parameters, fund vault
 
-Risk Parameters (Admin Controlled)
-Parameter
+---
 
-Description
+## ⚙️ Risk Parameters (Admin Controlled)
 
-Example Value
+| Parameter              | Description                         | Example    |
+| ---------------------- | ----------------------------------- | ---------- |
+| `loanToValueRatio`     | Max borrow vs. collateral value     | 5000 (50%) |
+| `interestRate`         | Annual interest rate                | 500 (5%)   |
+| `liquidationThreshold` | LTV at which a loan is liquidatable | 8000 (80%) |
+| `liquidationBonus`     | Collateral bonus for liquidators    | 500 (5%)   |
 
-loanToValueRatio
+> 🛡 **Security Note:** All calculations use **backing value** of WYT, not market price, to prevent manipulation.
 
-Max borrow amount vs. collateral value.
+---
 
-5000 (50%)
+## 📚 Functions
 
-interestRate
+### **User Functions**
 
-The annual interest rate for all loans.
+```solidity
+depositCollateral(uint256 amount)
+withdrawCollateral(uint256 amount)
+borrow(uint256 pUSDAmount)
+repay(uint256 pUSDAmount)
+```
 
-500 (5%)
+### **Liquidator Functions**
 
-liquidationThreshold
+```solidity
+liquidate(address borrowerAddress)
+```
 
-The LTV at which a loan is considered unhealthy.
+### **Admin Functions**
 
-8000 (80%)
+```solidity
+fundVault(uint256 pUSDAmount)
+withdrawVaultFunds(uint256 amount)
+setLoanToValueRatio(uint256 ltvBps)
+setInterestRate(uint256 rateBps)
+setLiquidationThreshold(uint256 thresholdBps)
+setLiquidationBonus(uint256 bonusBps)
+pause()
+unpause()
+```
 
-liquidationBonus
+---
 
-The collateral bonus awarded to liquidators.
+## 🔐 Security & Notes
 
-500 (5%)
+* **Over-collateralization** + liquidation ensures solvency
+* **Backing-based pricing** reduces oracle manipulation risk
+* **Role-gated functions** for admin & liquidators
+* **Pausable** in emergencies
+* **External audit** recommended before mainnet launch
 
-The protocol intentionally uses the backing value of WYT (not its market price) for all calculations to prevent price manipulation risk.
+---
 
-Admin & Public Functions
-User Functions
-depositCollateral(amount)
+## 📄 License
 
-withdrawCollateral(amount)
-
-borrow(pUSDAmount)
-
-repay(pUSDAmount)
-
-Liquidator Functions
-liquidate(borrowerAddress)
-
-Admin Functions
-fundVault(pUSDAmount)
-
-withdrawVaultFunds(amount)
-
-setLoanToValueRatio(ltvBps)
-
-setInterestRate(rateBps)
-
-setLiquidationThreshold(thresholdBps)
-
-setLiquidationBonus(bonusBps)
-
-pause() / unpause()
-
-Security & Notes
-The protocol is secured by over-collateralization and a liquidation mechanism.
-
-Pricing is based on WYT's intrinsic backing value to reduce oracle manipulation risk.
-
-Critical functions are role-gated to admins and liquidators.
-
-The contract is pausable by admins for emergency response.
-
-External audits are recommended before a mainnet launch.
-
-License
 MIT
+
+---
+
+If you want, I can also make a **dark-mode badge header banner** with your **WYT + pUSD logos** and place it above these badges so the README matches your branding instead of just having plain shields. That would make the repo look like a polished DeFi project page.
+
+Do you want me to design that branding header for you?
