@@ -25,7 +25,8 @@
 
         <!-- Balance Info Section -->
         <section id="balanceInfo" class="mb-8 hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+            <!-- MODIFIED: Changed grid to handle 5 items gracefully -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-4">
                 <div class="bg-secondary p-4 rounded-lg">
                     <p class="text-sm text-secondary">pUSD Available to Borrow</p>
                     <div id="vaultPusdAvailable" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
@@ -41,6 +42,11 @@
                 <div class="bg-secondary p-4 rounded-lg">
                     <p class="text-sm text-secondary">Your WYT Wallet Balance</p>
                     <div id="wytBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
+                </div>
+                <!-- ADDED: The missing pUSD balance display card -->
+                <div class="bg-secondary p-4 rounded-lg">
+                    <p class="text-sm text-secondary">Your pUSD Wallet Balance</p>
+                    <div id="pUSDBalanceDisplay" class="text-2xl font-semibold mt-1"><div class="skeleton h-8 w-24"></div></div>
                 </div>
             </div>
         </section>
