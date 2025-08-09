@@ -76,9 +76,9 @@ healthFactor   = (collateralValue * LTV_buffer) / currentDebt
 
 > Replace with your live addresses once deployed.
 
-* **WorkYieldLendingVault**: `0x...`
-* **WYT (ERC-20)**: `0x...`
-* **pUSD (ERC-20)**: `0x...`
+* **WorkYieldLendingVault**: `0xCcDc74D8D4a3a54e3bB65FBcE6733f4c2317e340`
+* **WYT (ERC-20)**: `0xccF4eaa301058Ec5561a07Cc38A75F47a2912EA5`
+* **pUSD (ERC-20)**: `0xdddD73F5Df1F0DC31373357beAC77545dC5A6f3F`
 
 Interfaces used:
 
@@ -304,7 +304,7 @@ pnpm hardhat run scripts/deploy.ts --network plume
 
 ## License
 
-MIT (or choose your preferred OSS license)
+MIT
 
 ---
 
