@@ -1,5 +1,3 @@
-Perfect — here’s your **Work Yield Lending Vault** README with **GitHub-style badges** in the header so it looks clean and professional at a glance:
-
 ---
 
 # 🏦 Work Yield Lending Vault
