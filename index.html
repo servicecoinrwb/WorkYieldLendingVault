@@ -136,24 +136,11 @@
                         <!-- Borrow Panel -->
                         <div id="borrowPanel" class="hidden">
                              <h3 class="text-xl font-semibold mb-4">Borrow pUSD</h3>
-                             <div class="space-y-6">
-                                <!-- Short Term Loan -->
-                                <div>
-                                    <h4 class="font-semibold mb-2">Short Term Loan (30 Days)</h4>
-                                    <div class="flex flex-col sm:flex-row items-center gap-4">
-                                        <input type="number" id="shortTermAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
-                                        <button id="borrowShortTermButton" class="w-full sm:w-auto btn-brand text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Borrow Short Term</button>
-                                    </div>
-                                </div>
-                                <!-- Long Term Loan -->
-                                <div>
-                                    <h4 class="font-semibold mb-2">Long Term Loan (1 Year)</h4>
-                                     <div class="flex flex-col sm:flex-row items-center gap-4">
-                                        <input type="number" id="longTermAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
-                                        <button id="borrowLongTermButton" class="w-full sm:w-auto btn-brand text-white font-semibold py-2 px-6 rounded-lg whitespace-nowrap">Borrow Long Term</button>
-                                    </div>
-                                </div>
-                             </div>
+                             <p class="text-sm text-gray-400 mb-4">Loans are open-term. Interest accrues until repaid. Maintain a healthy collateral level to avoid liquidation.</p>
+                            <div class="flex flex-col sm:flex-row items-center gap-4">
+                                <input type="number" id="borrowAmount" placeholder="Amount of pUSD" class="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-4 text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                                <button id="borrowButton" class="w-full sm:w-auto btn-brand text-white font-semibold py-2 px-6 rounded-lg">Borrow</button>
+                            </div>
                         </div>
                         <!-- Repay Panel -->
                         <div id="repayPanel" class="hidden">
@@ -234,7 +221,7 @@ const WYT_ADDRESS = '0xccF4eaa301058Ec5561a07Cc38A75F47a2912EA5';
 
 const PLUME_MAINNET = {
     chainId: '0x18232',
-    chainName: 'Plume Testnet', // Note: This is likely a testnet address
+    chainName: 'Plume Testnet',
     nativeCurrency: { name: 'Plume', symbol: 'PLUME', decimals: 18 },
     rpcUrls: ['https://testnet-rpc.plumenetwork.xyz/http'],
     blockExplorerUrls: ['https://testnet-explorer.plumenetwork.xyz'],
@@ -266,13 +253,11 @@ const LendingApp = {
             borrowPanel: document.getElementById('borrowPanel'),
             repayPanel: document.getElementById('repayPanel'),
             collateralAmountInput: document.getElementById('collateralAmount'),
-            shortTermAmountInput: document.getElementById('shortTermAmount'),
-            longTermAmountInput: document.getElementById('longTermAmount'),
+            borrowAmountInput: document.getElementById('borrowAmount'),
             repayAmountInput: document.getElementById('repayAmount'),
             depositButton: document.getElementById('depositButton'),
             withdrawButton: document.getElementById('withdrawButton'),
-            borrowShortTermButton: document.getElementById('borrowShortTermButton'),
-            borrowLongTermButton: document.getElementById('borrowLongTermButton'),
+            borrowButton: document.getElementById('borrowButton'),
             repayButton: document.getElementById('repayButton'),
             liquidatorPanel: document.getElementById('liquidatorPanel'),
             liquidateAddressInput: document.getElementById('liquidateAddress'),
@@ -299,8 +284,7 @@ const LendingApp = {
         this.elements.repayTab?.addEventListener('click', () => this.switchTab('repay'));
         this.elements.depositButton?.addEventListener('click', (e) => this.depositCollateral(e));
         this.elements.withdrawButton?.addEventListener('click', (e) => this.withdrawCollateral(e));
-        this.elements.borrowShortTermButton?.addEventListener('click', (e) => this.borrow(e, 'short'));
-        this.elements.borrowLongTermButton?.addEventListener('click', (e) => this.borrow(e, 'long'));
+        this.elements.borrowButton?.addEventListener('click', (e) => this.borrow(e));
         this.elements.repayButton?.addEventListener('click', (e) => this.repay(e));
         this.elements.liquidateButton?.addEventListener('click', (e) => this.liquidate(e));
         this.elements.fundVaultButton?.addEventListener('click', (e) => this.fundVault(e));
@@ -447,9 +431,8 @@ const LendingApp = {
         }, this.elements.collateralAmountInput); 
     },
     
-    async borrow(event, term) { 
-        const amountInput = term === 'short' ? this.elements.shortTermAmountInput : this.elements.longTermAmountInput;
-        const amount = amountInput.value;
+    async borrow(event) { 
+        const amount = this.elements.borrowAmountInput.value;
         if (!amount || parseFloat(amount) <= 0) return this.showNotification("Please enter a valid amount.", "error"); 
         await this.handleTransaction(event, async () => { 
             const pusdDecimals = await this.pusdContract.decimals(); 
@@ -458,7 +441,7 @@ const LendingApp = {
             const borrowTx = await this.vaultContract.borrow(parsedAmount); 
             await borrowTx.wait(); 
             return "Borrow successful!"; 
-        }, amountInput); 
+        }, this.elements.borrowAmountInput); 
     },
     
     async repay(event) { 
@@ -590,4 +573,4 @@ const LendingApp = {
 window.addEventListener('load', () => LendingApp.init());
 </script>
 </body>
-</html>
+</ht
